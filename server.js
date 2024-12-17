@@ -16,6 +16,11 @@ dotenv.config();
 
 app.use("/api/whatsapp",whatsappRoutes);
 
+app.get('/', (req, res) => {
+  res.send('whatsapp backend integration testing....')
+})
+
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
