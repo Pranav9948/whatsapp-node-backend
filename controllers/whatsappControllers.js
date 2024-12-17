@@ -22,7 +22,7 @@ const getWelcomeMessage = async (req, res) => {
       recipientName
     );
 
-    const completedResponse = sendMessage(response);
+    const completedResponse = await sendMessage(response);
 
     console.log("completedResponse", completedResponse);
 
