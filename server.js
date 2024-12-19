@@ -5,7 +5,8 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import axios from "axios";
 
-const {replyMessageStorage}=require('./controllers/whatsappControllers.js')
+import { replyMessageStorage } from "./controllers/whatsappControllers.js";
+
 
 const app = express();
 const PORT = process.env.PORT || 8500;
