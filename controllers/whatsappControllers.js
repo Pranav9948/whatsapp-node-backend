@@ -13,7 +13,6 @@ import axios from "axios";
 
 const customerName = "Pranav";
 
-const userSession = {};
 
 let responseMessage;
 
@@ -214,21 +213,6 @@ async function replyMessageStorage(userMessage, username, from, messageType) {
   try {
     userMessage = userMessage?.toLowerCase() || "";
 
-    console.log("User Message:", userMessage);
-
-    if (!userSession[from]) {
-      userSession[from] = true;
-
-      const responseTemplate = getWelcomeMessageTemplate(
-        process.env.RECIPIENT_WAID,
-        username
-      );
-
-      const completedResponse = await sendMessage(responseTemplate);
-
-      console.log("Message sent successfully:", completedResponse);
-      return completedResponse;
-    } else {
       if (messageType === "text") {
         if (
           ["hi", "hello", "hey", "heya", "hi there"].some((g) =>
@@ -360,7 +344,7 @@ async function replyMessageStorage(userMessage, username, from, messageType) {
         console.log("Message sent successfully:", response.data);
         return response.data;
       }
-    }
+    
   } catch (error) {
     console.error(
       "Error in replyMessageStorage:",

@@ -70,9 +70,18 @@ app.post("/webhook", async (req, res) => {
 
       const messageId = value.messages[0].id;
 
+      console.log("Message ID:", messageId);
+
       console.log("Incoming message:", msgBody);
 
       const existingMessage = await ProcessedMessage.findOne({ messageId });
+
+
+      const allMessages = await ProcessedMessage.find();
+
+    console.log("All Documents in ProcessedMessage Collection:",allMessages);
+
+
 
       if (existingMessage) {
         console.log(`Duplicate message ignored: ${messageId}`);
