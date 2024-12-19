@@ -39,37 +39,31 @@ app.get("/webhook", (req, res) => {
 app.post("/webhook", async (req, res) => {
   console.log("req.body", req.body);
 
-  
+  const bodyParam = req.body;
+  console.log(JSON.stringify(bodyParam, null, 2));
 
-  let body_param = req.body;
+  if (bodyParam.object) {
+    const entry = bodyParam.entry && bodyParam.entry[0];
+    const change = entry && entry.changes && entry.changes[0];
+    const value = change && change.value;
 
-  console.log(JSON.stringify(body_param, null, 2));
+    if (!value) {
+      return res.status(400).send("Invalid payload structure");
+    }
 
-  if (body_param.object) {
-    if (
-      body_param.entry &&
-      body_param.entry[0] &&
-      body_param.entry[0].changes &&
-      body_param.entry[0].changes[0] &&
-      body_param.entry[0].changes[0].value.messages &&
-      body_param.entry[0].changes[0].value.messages[0]
-    ) {
-      let phone_number_id =
-        body_param.entry[0].changes[0].value.metadata.phone_number_id;
-      let from = body_param.entry[0].changes[0].value.messages[0].from;
-      let id = body_param.entry[0].changes[0].value.messages[0].id;
-      let timestamp =
-        body_param.entry[0].changes[0].value.messages[0].timestamp;
-      let msg_body = body_param.entry[0].changes[0].value.messages[0].text.body;
+    // Check if it's a message
+    if (value.messages && value.messages[0]) {
+      const phoneNumberId = value.metadata.phone_number_id;
+      const from = value.messages[0].from; // Sender's phone number
+      const msgBody = value.messages[0].text.body; // Message text
 
+      console.log("Incoming message:", msgBody);
 
-
-      console.log('msg_body', msg_body);
-
+      // Respond with an interactive message
       try {
         const config = {
           method: "post",
-          url: `https://graph.facebook.com/${process.env.VERSION}/${process.env.PHONE_NUMBER_ID}/messages`,
+          url: `https://graph.facebook.com/${process.env.VERSION}/${phoneNumberId}/messages`,
           headers: {
             Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
             "Content-Type": "application/json",
@@ -110,13 +104,28 @@ app.post("/webhook", async (req, res) => {
         console.log("Message sent successfully:", response.data);
         return res.status(200).send("Message sent successfully");
       } catch (error) {
-        console.log("err".america, error);
+        console.error("Error sending message:", error.response?.data || error);
+        return res.status(500).send("Failed to send message");
       }
-    } else {
-      res.status(404).send("Invalid request");
     }
+
+    // Check if it's a status update
+    if (value.statuses && value.statuses[0]) {
+      const status = value.statuses[0].status;
+      const timestamp = value.statuses[0].timestamp;
+      const recipientId = value.statuses[0].recipient_id;
+
+      console.log(`Message to ${recipientId} is now ${status} at ${timestamp}`);
+      return res.status(200).send("Status update received");
+    }
+
+    // If no recognizable event type
+    return res.status(400).send("Unrecognized event type");
   }
+
+  res.status(404).send("Invalid request");
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
