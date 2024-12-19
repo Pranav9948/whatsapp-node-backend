@@ -12,7 +12,7 @@ import {
 
 const customerName = "Pranav";
 
-let userSession = new Set();
+const userSession = {};
 
 let responseMessage;
 
@@ -217,8 +217,9 @@ async function replyMessageStorage(userMessage, username,from) {
 
     console.log("User Message:", userMessage);
 
-    if (!userSession.has(from)) {
-      userSession.add(from);
+    if (!userSession[from]) {
+      
+      userSession[from] = true; 
 
       const responseTemplate = getWelcomeMessageTemplate(
         process.env.RECIPIENT_WAID,
@@ -269,6 +270,8 @@ async function replyMessageStorage(userMessage, username,from) {
       } else {
         responseMessage = responses.unknown;
       }
+
+      console.log('responseMessage', responseMessage);
 
       // Send the response message
       const config = {
