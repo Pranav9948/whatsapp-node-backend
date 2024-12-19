@@ -40,9 +40,7 @@ app.get("/webhook", (req, res) => {
 });
 
 app.post("/webhook", async (req, res) => {
-  let userSession = new Set();
-
-  let responseMessage;
+ 
 
   const bodyParam = req.body;
   console.log(JSON.stringify(bodyParam, null, 2));
@@ -74,7 +72,7 @@ app.post("/webhook", async (req, res) => {
 
       processedMessages.add(messageId);
 
-      const response = await replyMessageStorage(msgBody, "User");
+      const response = await replyMessageStorage(msgBody, "User",from);
 
       console.log("response here in post webhook", response);
     }
