@@ -184,35 +184,34 @@ const shareLocation = async (req, res) => {
   }
 };
 
-async function replyMessageStorage(userMessage) {
-  userMessage = userMessage.toLowerCase();
+async function replyMessageStorage(userMessage, username) {
+  try {
+    userMessage = userMessage?.toLowerCase() || "";
 
-  console.log("userMessage".bgMagenta, userMessage);
+    console.log("User Message:", userMessage);
 
-  if (
-    userMessage.includes("hi") ||
-    userMessage.includes("hello") ||
-    userMessage.includes("hey")
-  ) {
-    try {
-      const response = getWelcomeMessageTemplate(
+    if (
+      ["hi", "hello", "hey"].some((greeting) => userMessage.includes(greeting))
+    ) {
+      const responseTemplate = getWelcomeMessageTemplate(
         process.env.RECIPIENT_WAID,
         username
       );
 
-      const completedResponse = await sendMessage(response);
+      const completedResponse = await sendMessage(responseTemplate);
 
-      console.log("completedResponse", completedResponse);
-
-      return res.status(200).send("Message sent successfully.");
-    } catch (error) {
-      // Log and handle error
-      console.error(
-        "Error sending message:",
-        error.response?.data || error.message
-      );
-      return res.status(500).send("Failed to send message.");
+      console.log("Message sent successfully:", completedResponse);
+      return completedResponse;
     }
+
+    console.warn("No matching response for user message:", userMessage);
+    return "No matching response found";
+  } catch (error) {
+    console.error(
+      "Error in replyMessageStorage:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to send reply");
   }
 }
 
