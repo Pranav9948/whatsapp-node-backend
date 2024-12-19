@@ -39,6 +39,8 @@ app.get("/webhook", (req, res) => {
 app.post("/webhook", async (req, res) => {
   console.log("req.body", req.body);
 
+  
+
   let body_param = req.body;
 
   console.log(JSON.stringify(body_param, null, 2));
@@ -59,6 +61,10 @@ app.post("/webhook", async (req, res) => {
       let timestamp =
         body_param.entry[0].changes[0].value.messages[0].timestamp;
       let msg_body = body_param.entry[0].changes[0].value.messages[0].text.body;
+
+
+
+      console.log('msg_body', msg_body);
 
       try {
         const config = {
