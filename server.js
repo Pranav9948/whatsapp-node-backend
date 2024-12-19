@@ -7,7 +7,6 @@ import axios from "axios";
 
 import { replyMessageStorage } from "./controllers/whatsappControllers.js";
 
-
 const app = express();
 const PORT = process.env.PORT || 8500;
 app.use(cors());
@@ -41,7 +40,9 @@ app.get("/webhook", (req, res) => {
 });
 
 app.post("/webhook", async (req, res) => {
-  console.log("req.body", req.body);
+  let userSession = new Set();
+
+  let responseMessage;
 
   const bodyParam = req.body;
   console.log(JSON.stringify(bodyParam, null, 2));
@@ -60,10 +61,9 @@ app.post("/webhook", async (req, res) => {
       const phoneNumberId = value.metadata.phone_number_id;
       const from = value.messages[0].from; // Sender's phone number
       const msgBody = value.messages[0].text.body; // Message text
-      const messageType=value.messages[0].type; // Message type
+      const messageType = value.messages[0].type; // Message type
 
       const messageId = value.messages[0].id;
-
 
       console.log("Incoming message:", msgBody);
 
@@ -74,12 +74,9 @@ app.post("/webhook", async (req, res) => {
 
       processedMessages.add(messageId);
 
-      const response = await replyMessageStorage(msgBody,"User");
+      const response = await replyMessageStorage(msgBody, "User");
 
       console.log("response here in post webhook", response);
-
-      
-
     }
 
     // Check if it's a status update
@@ -98,11 +95,6 @@ app.post("/webhook", async (req, res) => {
 
   res.status(404).send("Invalid request");
 });
-
-
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

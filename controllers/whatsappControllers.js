@@ -12,6 +12,27 @@ import {
 
 const customerName = "Pranav";
 
+const responses = {
+  greetings: "Hello! How can I assist you today? 😊",
+  thanks:
+    "You're welcome! Let me know if there's anything else I can help you with. 🌟",
+  appreciation: "I'm glad to be of help! Have a great day ahead! 🌈",
+  farewell: "Goodbye! Feel free to reach out anytime. 👋",
+  inquiry:
+    "Could you please provide more details so I can assist you better? 🤔",
+  confusion: "I'm sorry, I didn't quite catch that. Can you rephrase? 🤷‍♂️",
+  request_services:
+    "We offer a wide range of services! Could you specify what you're looking for? 🛠️",
+  asking_cost:
+    "Our pricing depends on the specific service or package. Can you share more details? 💰",
+  compliments: "Thank you for your kind words! It means a lot to us. 😊",
+  greetings_morning: "Good morning! Wishing you a productive day ahead. ☀️",
+  greetings_evening: "Good evening! How can I assist you today? 🌙",
+  greetings_afternoon: "Good afternoon! Let me know how I can help. 🌤️",
+  follow_up: "I'll get back to you on this shortly. Please hold on. ⏳",
+  unknown: "I didn't understand that. Could you clarify your message? 🧐",
+};
+
 const getWelcomeMessage = async (req, res) => {
   try {
     console.log("tour", req.body);
@@ -185,14 +206,18 @@ const shareLocation = async (req, res) => {
 };
 
 async function replyMessageStorage(userMessage, username) {
+  let userSession = new Set();
+
+  let responseMessage;
+
   try {
     userMessage = userMessage?.toLowerCase() || "";
 
     console.log("User Message:", userMessage);
 
-    if (
-      ["hi", "hello", "hey"].some((greeting) => userMessage.includes(greeting))
-    ) {
+    if (!userSession.has(from)) {
+      userSession.add(from);
+
       const responseTemplate = getWelcomeMessageTemplate(
         process.env.RECIPIENT_WAID,
         username
@@ -202,10 +227,70 @@ async function replyMessageStorage(userMessage, username) {
 
       console.log("Message sent successfully:", completedResponse);
       return completedResponse;
-    }
+    } else {
+      if (
+        ["hi", "hello", "hey", "heya", "hi there"].some((g) =>
+          userMessage.includes(g)
+        )
+      ) {
+        responseMessage = responses.greetings;
+      } else if (
+        ["thank you", "thanks", "thx", "thankyou", "much appreciated"].some(
+          (t) => userMessage.includes(t)
+        )
+      ) {
+        responseMessage = responses.thanks;
+      } else if (
+        ["great", "amazing", "awesome", "fantastic", "good work"].some((a) =>
+          userMessage.includes(a)
+        )
+      ) {
+        responseMessage = responses.appreciation;
+      } else if (
+        ["bye", "goodbye", "see you", "take care"].some((f) =>
+          userMessage.includes(f)
+        )
+      ) {
+        responseMessage = responses.farewell;
+      } else if (
+        ["what", "how", "why", "where", "when", "can i"].some((q) =>
+          userMessage.startsWith(q)
+        )
+      ) {
+        responseMessage = responses.inquiry;
+      } else if (
+        ["confused", "don't understand", "not clear", "help"].some((c) =>
+          userMessage.includes(c)
+        )
+      ) {
+        responseMessage = responses.confusion;
+      } else {
+        responseMessage = responses.unknown;
+      }
 
-    console.warn("No matching response for user message:", userMessage);
-    return "No matching response found";
+      // Send the response message
+      const config = {
+        method: "post",
+        url: `https://graph.facebook.com/${process.env.VERSION}/${process.env.PHONE_NUMBER_ID}/messages`,
+        headers: {
+          Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        data: {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: from,
+          type: "text",
+          text: {
+            body: responseMessage,
+          },
+        },
+      };
+
+      const response = await axios(config);
+      console.log("Message sent successfully:", response.data);
+      return response.data;
+    }
   } catch (error) {
     console.error(
       "Error in replyMessageStorage:",
