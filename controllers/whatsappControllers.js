@@ -210,17 +210,14 @@ const shareLocation = async (req, res) => {
   }
 };
 
-async function replyMessageStorage(userMessage, username,from) {
-
-
+async function replyMessageStorage(userMessage, username, from, messageType) {
   try {
     userMessage = userMessage?.toLowerCase() || "";
 
     console.log("User Message:", userMessage);
 
     if (!userSession[from]) {
-      
-      userSession[from] = true; 
+      userSession[from] = true;
 
       const responseTemplate = getWelcomeMessageTemplate(
         process.env.RECIPIENT_WAID,
@@ -232,70 +229,137 @@ async function replyMessageStorage(userMessage, username,from) {
       console.log("Message sent successfully:", completedResponse);
       return completedResponse;
     } else {
-      if (
-        ["hi", "hello", "hey", "heya", "hi there"].some((g) =>
-          userMessage.includes(g)
-        )
-      ) {
-        responseMessage = responses.greetings;
-      } else if (
-        ["thank you", "thanks", "thx", "thankyou", "much appreciated"].some(
-          (t) => userMessage.includes(t)
-        )
-      ) {
-        responseMessage = responses.thanks;
-      } else if (
-        ["great", "amazing", "awesome", "fantastic", "good work"].some((a) =>
-          userMessage.includes(a)
-        )
-      ) {
-        responseMessage = responses.appreciation;
-      } else if (
-        ["bye", "goodbye", "see you", "take care"].some((f) =>
-          userMessage.includes(f)
-        )
-      ) {
-        responseMessage = responses.farewell;
-      } else if (
-        ["what", "how", "why", "where", "when", "can i"].some((q) =>
-          userMessage.startsWith(q)
-        )
-      ) {
-        responseMessage = responses.inquiry;
-      } else if (
-        ["confused", "don't understand", "not clear", "help"].some((c) =>
-          userMessage.includes(c)
-        )
-      ) {
-        responseMessage = responses.confusion;
-      } else {
-        responseMessage = responses.unknown;
-      }
+      if (messageType === "text") {
+        if (
+          ["hi", "hello", "hey", "heya", "hi there"].some((g) =>
+            userMessage.includes(g)
+          )
+        ) {
+          const listMessage = {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: from,
+            type: "interactive",
+            interactive: {
+              type: "list",
+              header: {
+                type: "text",
+                text: "Welcome to Travo 😊",
+              },
+              body: {
+                text: "How can we assist you today? Please choose from the options below:",
+              },
+              action: {
+                button: "View Options",
+                sections: [
+                  {
+                    title: "Options",
+                    rows: [
+                      {
+                        id: "tour_packages",
+                        title: "1️⃣ Tour Packages",
+                        description:
+                          "Explore travel packages tailored for you.",
+                      },
+                      {
+                        id: "faqs",
+                        title: "2️⃣ FAQ",
+                        description: "Find answers to common questions.",
+                      },
+                      {
+                        id: "customer_support",
+                        title: "3️⃣ Customer Support",
+                        description: "Connect with our support team.",
+                      },
+                      {
+                        id: "payment_help",
+                        title: "4️⃣ Payment Help",
+                        description: "Need help with payment or booking?",
+                      },
+                      {
+                        id: "booking_help",
+                        title: "5️⃣ Booking Help",
+                        description: "Need help with booking?",
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          };
 
-      console.log('responseMessage', responseMessage);
+          const config = {
+            method: "post",
+            url: `https://graph.facebook.com/${process.env.VERSION}/${process.env.PHONE_NUMBER_ID}/messages`,
+            headers: {
+              Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+            data: listMessage,
+          };
 
-      // Send the response message
-      const config = {
-        method: "post",
-        url: `https://graph.facebook.com/${process.env.VERSION}/${process.env.PHONE_NUMBER_ID}/messages`,
-        headers: {
-          Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        data: {
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
-          to: from,
-          type: "text",
-          text: {
-            body: responseMessage,
+          const response = await axios(config);
+          console.log("List message sent successfully:", response.data);
+          return response.data;
+        } else if (
+          ["thank you", "thanks", "thx", "thankyou", "much appreciated"].some(
+            (t) => userMessage.includes(t)
+          )
+        ) {
+          responseMessage = responses.thanks;
+        } else if (
+          ["great", "amazing", "awesome", "fantastic", "good work"].some((a) =>
+            userMessage.includes(a)
+          )
+        ) {
+          responseMessage = responses.appreciation;
+        } else if (
+          ["bye", "goodbye", "see you", "take care"].some((f) =>
+            userMessage.includes(f)
+          )
+        ) {
+          responseMessage = responses.farewell;
+        } else if (
+          ["what", "how", "why", "where", "when", "can i"].some((q) =>
+            userMessage.startsWith(q)
+          )
+        ) {
+          responseMessage = responses.inquiry;
+        } else if (
+          ["confused", "don't understand", "not clear", "help"].some((c) =>
+            userMessage.includes(c)
+          )
+        ) {
+          responseMessage = responses.confusion;
+        } else {
+          responseMessage = responses.unknown;
+        }
+
+        console.log("responseMessage", responseMessage);
+
+        // Send the response message
+        const config = {
+          method: "post",
+          url: `https://graph.facebook.com/${process.env.VERSION}/${process.env.PHONE_NUMBER_ID}/messages`,
+          headers: {
+            Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
+            "Content-Type": "application/json",
           },
-        },
-      };
+          data: {
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: from,
+            type: "text",
+            text: {
+              body: responseMessage,
+            },
+          },
+        };
 
-      const response = await axios(config);
-      console.log("Message sent successfully:", response.data);
-      return response.data;
+        const response = await axios(config);
+        console.log("Message sent successfully:", response.data);
+        return response.data;
+      }
     }
   } catch (error) {
     console.error(
