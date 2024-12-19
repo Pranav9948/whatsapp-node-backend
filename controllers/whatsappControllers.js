@@ -12,6 +12,10 @@ import {
 
 const customerName = "Pranav";
 
+let userSession = new Set();
+
+let responseMessage;
+
 const responses = {
   greetings: "Hello! How can I assist you today? 😊",
   thanks:
@@ -206,9 +210,7 @@ const shareLocation = async (req, res) => {
 };
 
 async function replyMessageStorage(userMessage, username,from) {
-  let userSession = new Set();
 
-  let responseMessage;
 
   try {
     userMessage = userMessage?.toLowerCase() || "";
