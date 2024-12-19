@@ -72,7 +72,7 @@ const getPackageVideos = async (req, res) => {
 
     console.log("selee", selectedVideoPackagedetails);
 
-    const response = getVideoMessageInput(      
+    const response = getVideoMessageInput(
       process.env.RECIPIENT_WAID,
       customerName,
       selectedVideoPackagedetails
@@ -184,6 +184,38 @@ const shareLocation = async (req, res) => {
   }
 };
 
+async function replyMessageStorage(userMessage) {
+  userMessage = userMessage.toLowerCase();
+
+  console.log("userMessage".bgMagenta, userMessage);
+
+  if (
+    userMessage.includes("hi") ||
+    userMessage.includes("hello") ||
+    userMessage.includes("hey")
+  ) {
+    try {
+      const response = getWelcomeMessageTemplate(
+        process.env.RECIPIENT_WAID,
+        username
+      );
+
+      const completedResponse = await sendMessage(response);
+
+      console.log("completedResponse", completedResponse);
+
+      return res.status(200).send("Message sent successfully.");
+    } catch (error) {
+      // Log and handle error
+      console.error(
+        "Error sending message:",
+        error.response?.data || error.message
+      );
+      return res.status(500).send("Failed to send message.");
+    }
+  }
+}
+
 export {
   getWelcomeMessage,
   enquirePackageDetails,
@@ -191,4 +223,5 @@ export {
   dateTesting,
   enquirePackageDetailsPdf,
   shareLocation,
+  replyMessageStorage,
 };

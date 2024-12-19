@@ -5,6 +5,8 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import axios from "axios";
 
+const {replyMessageStorage}=require('./controllers/whatsappControllers.js')
+
 const app = express();
 const PORT = process.env.PORT || 8500;
 app.use(cors());
@@ -56,57 +58,17 @@ app.post("/webhook", async (req, res) => {
       const phoneNumberId = value.metadata.phone_number_id;
       const from = value.messages[0].from; // Sender's phone number
       const msgBody = value.messages[0].text.body; // Message text
+      const messageType=value.messages[0].type; // Message type
+
 
       console.log("Incoming message:", msgBody);
 
-      // Respond with an interactive message
-      try {
-        const config = {
-          method: "post",
-          url: `https://graph.facebook.com/${process.env.VERSION}/${phoneNumberId}/messages`,
-          headers: {
-            Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          data: {
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
-            to: from,
-            type: "interactive",
-            interactive: {
-              type: "button",
-              body: {
-                text: "Please choose one of the options below:",
-              },
-              action: {
-                buttons: [
-                  {
-                    type: "reply",
-                    reply: {
-                      id: "option_1",
-                      title: "Option 1",
-                    },
-                  },
-                  {
-                    type: "reply",
-                    reply: {
-                      id: "option_2",
-                      title: "Option 2",
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        };
+      const response = await replyMessageStorage(msgBody,"User");
 
-        const response = await axios(config);
-        console.log("Message sent successfully:", response.data);
-        return res.status(200).send("Message sent successfully");
-      } catch (error) {
-        console.error("Error sending message:", error.response?.data || error);
-        return res.status(500).send("Failed to send message");
-      }
+      console.log("response here in post webhook", response);
+
+      
+
     }
 
     // Check if it's a status update
@@ -125,6 +87,10 @@ app.post("/webhook", async (req, res) => {
 
   res.status(404).send("Invalid request");
 });
+
+
+
+
 
 
 app.listen(PORT, () => {
