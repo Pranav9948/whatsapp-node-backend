@@ -4,12 +4,17 @@ import whatsappRoutes from "./routes/whatsapp.js";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import axios from "axios";
+import mongoose from "mongoose";
 
 import { replyMessageStorage } from "./controllers/whatsappControllers.js";
 
-import ProcessedMessage from "./models/ProcessedMessage.js";
+import User from "./models/userSchema.js";
 
 import connectDB from "./db/db.js";
+import {
+  getWelcomeMessageTemplate,
+  sendMessage,
+} from "./Helpers/WhatsappHelper.js";
 
 const app = express();
 const PORT = process.env.PORT || 8500;
@@ -48,74 +53,85 @@ app.get("/webhook", (req, res) => {
   }
 });
 
+
 app.post("/webhook", async (req, res) => {
-  const bodyParam = req.body;
+  const { body: bodyParam } = req; // Destructure to get body
   console.log(JSON.stringify(bodyParam, null, 2));
 
-  if (bodyParam.object) {
-    const entry = bodyParam.entry && bodyParam.entry[0];
-    const change = entry && entry.changes && entry.changes[0];
-    const value = change && change.value;
-
-    if (!value) {
-      return res.status(400).send("Invalid payload structure");
-    }
-
-    // Check if it's a message
-    if (value.messages && value.messages[0]) {
-      const phoneNumberId = value.metadata.phone_number_id;
-      const from = value.messages[0].from; // Sender's phone number
-      const msgBody = value.messages[0].text.body; // Message text
-      const messageType = value.messages[0].type; // Message type
-
-      const messageId = value.messages[0].id;
-
-      console.log("Message ID:", messageId);
-
-      console.log("Incoming message:", msgBody);
-
-      const existingMessage = await ProcessedMessage.findOne({ messageId });
-
-
-      const allMessages = await ProcessedMessage.find();
-
-    console.log("All Documents in ProcessedMessage Collection:",allMessages);
-
-
-
-      if (existingMessage) {
-        console.log(`Duplicate message ignored: ${messageId}`);
-        return res.status(200).send("Duplicate message ignored");
-      }
-
-      const newProcessedMessage = new ProcessedMessage({
-        messageId,
-        senderId: from,
-        hasReceivedWelcomeMessage: true,
-      });
-      await newProcessedMessage.save();
-
-      const response = await replyMessageStorage(msgBody, "User", from,messageType);
-
-      console.log("response here in post webhook", response);
-    }
-
-    // Check if it's a status update
-    if (value.statuses && value.statuses[0]) {
-      const status = value.statuses[0].status;
-      const timestamp = value.statuses[0].timestamp;
-      const recipientId = value.statuses[0].recipient_id;
-
-      console.log(`Message to ${recipientId} is now ${status} at ${timestamp}`);
-      return res.status(200).send("Status update received");
-    }
-
-    // If no recognizable event type
-    return res.status(400).send("Unrecognized event type");
+  // Check if the request contains the expected object
+  if (!bodyParam.object) {
+    return res.status(404).send("Invalid request");
   }
 
-  res.status(404).send("Invalid request");
+  const entry = bodyParam.entry?.[0];
+  const change = entry?.changes?.[0];
+  const value = change?.value;
+
+  if (!value) {
+    return res.status(400).send("Invalid payload structure");
+  }
+
+  // Check if it's a message
+  if (value.messages?.[0]) {
+    const { phone_number_id: phoneNumberId, messages } = value;
+    const { from: senderId, text: { body: msgBody }, type: messageType, id: messageId } = messages[0];
+
+    console.log("Message ID:", messageId);
+    console.log("Incoming message:", msgBody);
+
+    const existingUser = await User.findOne({ senderId });
+
+    if (existingUser) {
+      console.log("User exists:", existingUser);
+
+      // Check if the messageId is already in the messageIds array
+      if (existingUser.messageIds.includes(messageId)) {
+        console.log("Message ID already exists for this user. No further actions will be taken.");
+        return res.status(200).send("Message ID already exists"); // Respond to the client
+      }
+
+      // Add the new messageId if it doesn't already exist
+      existingUser.messageIds.push(messageId);
+      await existingUser.save();
+      console.log("New message ID added for existing user:", existingUser);
+
+      // Handle reply logic for existing users
+      const response = await replyMessageStorage(msgBody, "User", senderId, messageType);
+      console.log("Response for existing user:", response);
+
+    } else {
+      // New user case
+      console.log("New user detected. Creating user and sending welcome message.");
+
+      const newUser = new User({
+        senderId,
+        messageIds: [messageId], // Initialize with the first messageId
+        hasReceivedWelcomeMessage: true,
+      });
+      await newUser.save();
+      console.log("New user created:", newUser);
+
+      // Send the welcome message template
+      const responseTemplate = getWelcomeMessageTemplate(process.env.RECIPIENT_WAID, "User");
+      const completedResponse = await sendMessage(responseTemplate);
+      console.log("Welcome message sent to new user:", completedResponse);
+    }
+
+    // Respond to the client
+    return res.status(200).send("Webhook processed successfully");
+  }
+
+  // Check if it's a status update
+  if (value.statuses?.[0]) {
+    const { status, timestamp, recipient_id: recipientId } = value.statuses[0];
+    console.log(`Message to ${recipientId} is now ${status} at ${timestamp}`);
+    return res.status(200).send("Status update received");
+  }
+
+  // If no recognizable event type
+  return res.status(400).send("Unrecognized event type");
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
