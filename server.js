@@ -7,12 +7,21 @@ import axios from "axios";
 
 import { replyMessageStorage } from "./controllers/whatsappControllers.js";
 
+import ProcessedMessage from "./models/ProcessedMessage.js";
+
+import connectDB from "./db/db.js";
+
 const app = express();
 const PORT = process.env.PORT || 8500;
+const MONGO_URI = process.env.MONGO_URI;
+
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const myToken = process.env.MYTOKEN;
 const processedMessages = {};
@@ -40,8 +49,6 @@ app.get("/webhook", (req, res) => {
 });
 
 app.post("/webhook", async (req, res) => {
- 
-
   const bodyParam = req.body;
   console.log(JSON.stringify(bodyParam, null, 2));
 
@@ -65,23 +72,23 @@ app.post("/webhook", async (req, res) => {
 
       console.log("Incoming message:", msgBody);
 
-           // Check if this message has already been processed
-           if (processedMessages[messageId]) {
-            console.log(`Duplicate message ignored: ${messageId}`);
-            return res.status(200).send("Duplicate message ignored");
-          }
-    
-          // Mark the message as processed
-          processedMessages[messageId] = true;
-    
-          // Optionally clean up old processed messages to avoid memory issues
-          setTimeout(() => {
-            delete processedMessages[messageId];
-          }, 24 * 60 * 60 * 1000);
+      const existingMessage = await ProcessedMessage.findOne({ messageId });
 
-   
+      if (existingMessage) {
+        console.log(`Duplicate message ignored: ${messageId}`);
+        return res.status(200).send("Duplicate message ignored");
+      }
 
-      const response = await replyMessageStorage(msgBody, "User",from);
+      const newProcessedMessage = new ProcessedMessage({
+        messageId,
+        senderId: from,
+        hasReceivedWelcomeMessage: true,
+      });
+      await newProcessedMessage.save();
+
+
+
+      const response = await replyMessageStorage(msgBody, "User", from);
 
       console.log("response here in post webhook", response);
     }
