@@ -16,6 +16,7 @@ app.use(bodyParser.json());
 dotenv.config();
 
 const myToken = process.env.MYTOKEN;
+const processedMessages = new Set();
 
 app.use("/api/whatsapp", whatsappRoutes);
 
@@ -61,8 +62,17 @@ app.post("/webhook", async (req, res) => {
       const msgBody = value.messages[0].text.body; // Message text
       const messageType=value.messages[0].type; // Message type
 
+      const messageId = value.messages[0].id;
+
 
       console.log("Incoming message:", msgBody);
+
+      if (processedMessages.has(messageId)) {
+        console.log(`Duplicate message ignored: ${messageId}`);
+        return res.status(200).send("Duplicate message ignored");
+      }
+
+      processedMessages.add(messageId);
 
       const response = await replyMessageStorage(msgBody,"User");
 
