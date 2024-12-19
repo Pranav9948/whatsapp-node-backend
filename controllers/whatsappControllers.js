@@ -9,6 +9,7 @@ import {
   uploadMedia,
   sendLocationMessage,
 } from "../Helpers/WhatsappHelper.js";
+import axios from "axios";
 
 const customerName = "Pranav";
 

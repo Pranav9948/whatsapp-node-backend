@@ -86,8 +86,6 @@ app.post("/webhook", async (req, res) => {
       });
       await newProcessedMessage.save();
 
-
-
       const response = await replyMessageStorage(msgBody, "User", from);
 
       console.log("response here in post webhook", response);
