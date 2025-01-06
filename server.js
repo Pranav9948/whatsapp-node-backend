@@ -74,10 +74,25 @@ app.post("/webhook", async (req, res) => {
  
   if (value.messages?.[0]) {
     const { phone_number_id: phoneNumberId, messages } = value;
-    const { from: senderId, text: { body: msgBody }, type: messageType, id: messageId } = messages[0];
+   
+
+
+    const { from: senderId, type: messageType, id: messageId } = messages[0];
+
+    let msgBody = null;
+    if (messageType === "text") {
+      msgBody = messages[0]?.text?.body;
+    } else if (messageType === "button") {
+      msgBody = messages[0]?.button?.payload;
+    }
 
     console.log("Message ID:", messageId);
     console.log("Incoming message:", msgBody);
+
+    if (!msgBody) {
+      console.error("Message body is undefined.");
+      return res.status(400).send("Message body is undefined");
+    }
 
 
     const existingUser = await User.findOne({ senderId });
