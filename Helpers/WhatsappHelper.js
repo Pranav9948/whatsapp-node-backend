@@ -481,6 +481,17 @@ async function replyMessageStorage(userMessage, username, from, messageType) {
       unknown: [],
     };
 
+
+    const responses = {
+      greeting: "Hello! How can we assist you today?",
+      thanks: "You're welcome! Let us know if you need further assistance.",
+      appreciation: "Thank you! We appreciate your kind words.",
+      farewell: "Goodbye! Have a great day!",
+      inquiry: "Could you provide more details about your inquiry?",
+      confusion: "We're here to help! Could you clarify your issue?",
+      unknown: "Sorry, I didn't understand that. Can you rephrase?",
+    };
+
     let responseMessage;
 
     // Check for greetings
