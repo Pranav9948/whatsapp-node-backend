@@ -177,7 +177,7 @@ async function sendQuickReplyButtonMessages(to, message) {
   const replyMessage={
     "messaging_product": "whatsapp",   
     "recipient_type": "individual",
-    "to": to,
+    to,
     "type": "text",
     "text": {
         "preview_url": false,
