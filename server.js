@@ -14,6 +14,7 @@ import {
   getWelcomeMessageTemplate,
   replyMessageStorage,
   sendMessage,
+  sendQuickReplyButtonMessages,
 } from "./Helpers/WhatsappHelper.js";
 
 const app = express();
@@ -73,7 +74,7 @@ app.post("/webhook", async (req, res) => {
 
  
   if (value.messages?.[0]) {
-    const { phone_number_id: phoneNumberId, messages } = value;
+    const { phone_number_id: phoneNumberId, messages } = value;  
    
 
 
@@ -93,6 +94,29 @@ app.post("/webhook", async (req, res) => {
       console.error("Message body is undefined.");
       return res.status(400).send("Message body is undefined");
     }
+
+
+    if (msgBody.trim().toLowerCase() === "confirm booking") {
+      const confirmationMessage = `
+        🌟 Thank you for confirming your interest in our package!
+
+        A travel specialist will be in touch shortly to discuss your booking and answer any questions you may have. 
+        If you need immediate assistance, feel free to reach out to us at 📞 +60179819827 
+
+        We're excited to help you plan your trip! ✈️
+      `;
+
+      // Send the confirmation message
+      await sendQuickReplyButtonMessages({
+        to: senderId,
+        message: confirmationMessage,
+      });
+
+      console.log("Confirmation message sent:", confirmationMessage);
+      return res.status(200).send("Confirmation message sent successfully");
+    }
+
+
 
 
     const existingUser = await User.findOne({ senderId });
@@ -134,18 +158,7 @@ app.post("/webhook", async (req, res) => {
     }
 
 
-    if (messageType === "button") {
-
-      console.log('button deteted...')
-      const { button: { payload } } = message;
-      console.log("Quick reply button clicked with payload:", payload);
-
-      const response = await handleQuickReply(payload, senderId);
-      console.log("Response for quick reply:", response);
-
-      return res.status(200).send("Quick reply button processed successfully");
-    }
-
+   
 
 
     // Respond to the client
