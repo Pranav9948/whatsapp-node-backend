@@ -14,8 +14,9 @@ import {
   getWelcomeMessageTemplate,
   replyMessageStorage,
   sendMessage,
-  sendQuickReplyButtonMessages,
+  
 } from "./Helpers/WhatsappHelper.js";
+import { sendQuickReplyButtonMessages } from "./controllers/whatsappControllers.js";
 
 const app = express();
 const PORT = process.env.PORT || 8500;

@@ -8,7 +8,8 @@ import {
   getPackageDetailsInPdf,
   uploadMedia,
   sendLocationMessage,
-  getBookNowMessageTemplate,getImageTemplateReplyMessage,replyMessageStorage
+  getBookNowMessageTemplate,getImageTemplateReplyMessage,replyMessageStorage,
+  getTextMessageInput
 
   
 } from "../Helpers/WhatsappHelper.js";
@@ -248,6 +249,8 @@ const shareLocation = async (req, res) => {
 
 const getReplyToCustomer = async (req,res) => {
 
+
+
 console.log('hello',colors.magenta("helloooo"))
 
   try {
@@ -272,6 +275,54 @@ console.log('hello',colors.magenta("helloooo"))
 
 
 
+async function sendQuickReplyButtonMessages(to, message) {
+
+
+  
+
+
+  try {
+    
+
+   const response= await getTextMessageInput(to, message)
+
+   console.log("response here", response);
+
+   const completedResponse = await sendMessage(response);
+
+
+  } catch (error) {
+    console.log("err".america, error.config.data);
+
+    if (error.response) {
+      console.log("error".red, error.response.data.error.error_data);
+      console.error("Error response from API:", {
+        status: error.response.status,
+        headers: error.response.headers,
+        data: error.response.data,
+      });
+    } else if (error.request) {
+      // Request was sent but no response received
+      console.error("No response received:", error.request);
+    } else {
+      // An error occurred while setting up the request
+      console.error("Error setting up request:", error.message);
+    }
+
+    // Re-throw the error to let the caller handle it
+    throw new Error(
+      `Failed to send message: ${
+        error.response?.data?.error?.message || error.message
+      }`
+    );
+  }
+
+  
+
+}
+
+
+
 export {
   getWelcomeMessage,
   enquirePackageDetails,
@@ -281,5 +332,5 @@ export {
   shareLocation,
   getImageTemplateReplyMessage,  
   bookNow,
-  getReplyToCustomer,
+  getReplyToCustomer,sendQuickReplyButtonMessages
 };
