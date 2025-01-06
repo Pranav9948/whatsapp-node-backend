@@ -108,10 +108,7 @@ app.post("/webhook", async (req, res) => {
       `;
 
       // Send the confirmation message
-      await sendQuickReplyButtonMessages({
-        to: senderId,
-        message: confirmationMessage,
-      });
+      await sendQuickReplyButtonMessages(senderId,confirmationMessage);
 
       console.log("Confirmation message sent:", confirmationMessage);
       return res.status(200).send("Confirmation message sent successfully");

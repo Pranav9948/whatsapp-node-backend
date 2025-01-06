@@ -278,7 +278,8 @@ console.log('hello',colors.magenta("helloooo"))
 async function sendQuickReplyButtonMessages(to, message) {
 
 
-  
+  console.log('to',to)
+  console.log('message',message)
 
 
   try {
