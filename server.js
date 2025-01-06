@@ -107,13 +107,27 @@ app.post("/webhook", async (req, res) => {
         We're excited to help you plan your trip! ✈️
       `;
 
-      // Send the confirmation message
-      await sendQuickReplyButtonMessages(senderId,confirmationMessage);
-
+      await sendQuickReplyButtonMessages(senderId, confirmationMessage);
       console.log("Confirmation message sent:", confirmationMessage);
       return res.status(200).send("Confirmation message sent successfully");
     }
 
+    // Handle "Cancel Inquiry" message
+    if (msgBody.trim().toLowerCase() === "cancel inquiry") {
+      const cancellationMessage = `
+        ❌ We're sorry to hear that you want to cancel your inquiry.
+
+        If there's anything we can do to assist you or improve your experience, please let us know. 
+        Your feedback is valuable to us!
+
+        Thank you for considering our services. If you have any other questions or need assistance, feel free to reach out. 📞 +60179819827
+      `;
+
+      // Send the cancellation message
+      await sendQuickReplyButtonMessages(senderId, cancellationMessage);
+      console.log("Cancellation message sent:", cancellationMessage);
+      return res.status(200).send("Cancellation message sent successfully");
+    }
 
 
 
