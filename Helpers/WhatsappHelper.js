@@ -1,8 +1,7 @@
 import axios from "axios";
 import FormData from "form-data";
 import fs from "fs";
-
-
+import colors from "colors";
 
 async function sendMessage(data) {
   try {
@@ -20,10 +19,7 @@ async function sendMessage(data) {
     console.log("Message sent successfully:", response.data);
     return response.data;
   } catch (error) {
-
-    
     console.log("err".america, error.config.data);
-
 
     if (error.response) {
       console.log("error".red, error.response.data.error.error_data);
@@ -66,7 +62,7 @@ function getImageTemplatedMessage(recipient, tourPackage) {
   return JSON.stringify({
     messaging_product: "whatsapp",
     to: recipient,
-    type: "template",
+    type: "template",   
     template: {
       name: "tour_package_enquiry",
       language: {
@@ -110,6 +106,74 @@ function getImageTemplatedMessage(recipient, tourPackage) {
   });
 }
 
+function getBookNowMessageTemplate(recipient, bookingDetails) {
+  console.log("bookingDetails".america, bookingDetails.selectedPackages);
+
+  const packageName = bookingDetails.selectedPackages[0]?.title;
+  const packagePrice = bookingDetails.selectedPackages[0]?.price;
+  const roomType = bookingDetails.selectedRoom.name;
+  const roomPrice = bookingDetails.selectedRoom.price;
+  const startDate = bookingDetails.startDate;
+  const endDate = bookingDetails.endDate;
+  const roomsBooked = bookingDetails.selectedRooms;
+  const headerImageUrl =
+    "https://media2.thrillophilia.com/images/photos/000/080/179/original/1631022851_Rawa_Island_KL.jpg?w=753&h=450&dpr=1.5";
+  const customerName = "Pranav";
+
+  console.log("packageName", packageName);
+  console.log("packagePrice", packagePrice);
+  console.log("roomType", roomType);
+  console.log("roomPrice", roomPrice);
+  console.log("startDate", startDate);
+  console.log("endDate", endDate);
+  console.log("roomsBoked", roomsBooked);
+  console.log("headerImageUrl", headerImageUrl);
+  console.log("customerName", customerName);
+
+  return JSON.stringify({
+    messaging_product: "whatsapp",
+    to: recipient,
+    type: "template",
+    template: {
+      name: "book_now_template",
+      language: {
+        code: "en",
+      },
+      components: [
+        {
+          type: "header",
+          parameters: [
+            {
+              type: "image",
+              image: {
+                link: headerImageUrl,
+              },
+            },
+          ],
+        },
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: `${customerName}` },
+            { type: "text", text: `${packageName}` },
+            { type: "text", text: `${packagePrice}` },
+            { type: "text", text: `${roomType}` },
+            { type: "text", text: `${roomPrice}` },
+            { type: "text", text: `${startDate}` },
+            { type: "text", text: `${endDate}` },
+            { type: "text", text: `${roomsBooked}` },
+          ],
+        },
+      ],
+    },
+  });
+}
+
+
+
+
+
+
 function getWelcomeMessageTemplate(recipient, recipientName) {
   console.log("recipientName", recipientName);
   return JSON.stringify({
@@ -149,6 +213,9 @@ function getWelcomeMessageTemplate(recipient, recipientName) {
 }
 
 function getVideoMessageInput(recipient, customerName, packageDetails) {
+
+  console.log("packageDetails",colors.magenta(packageDetails));
+  
   return JSON.stringify({
     messaging_product: "whatsapp",
     to: recipient,
@@ -243,9 +310,13 @@ function travelDateTesting(recipient, customerName, dateResult) {
 }
 
 function getPackageDetailsInPdf(id, recipient, customerName, tourPackage) {
-
-console.log('id,recie,name,tour'.bgMagenta,id,recipient,customerName,tourPackage)
-
+  console.log(
+    "id,recie,name,tour".bgMagenta,
+    id,
+    recipient,
+    customerName,
+    tourPackage
+  );
 
   return JSON.stringify({
     messaging_product: "whatsapp",
@@ -321,7 +392,6 @@ async function uploadMedia() {
     console.log("API Response:", response.data.id);
 
     return response.data.id;
-
   } catch (error) {
     console.error(
       "Error sending message:",
@@ -367,7 +437,7 @@ async function sendLocationMessage(recipient, customerName, pickupDetails) {
               text: customerName,
             },
             {
-              type: "text",
+              type: "text", 
               text: pickupDetails.tripName,
             },
             {
@@ -397,6 +467,270 @@ async function sendLocationMessage(recipient, customerName, pickupDetails) {
   });
 }
 
+async function replyMessageStorage(userMessage, username, from, messageType) {
+  try {
+    userMessage = userMessage?.toLowerCase() || "";
+
+    const responseMessageMap = {
+      greeting: ["hi", "hello", "hey", "heya", "hi there"],
+      thanks: ["thank you", "thanks", "thx", "thankyou", "much appreciated"],
+      appreciation: ["great", "amazing", "awesome", "fantastic", "good work"],
+      farewell: ["bye", "goodbye", "see you", "take care"],
+      inquiry: ["what", "how", "why", "where", "when", "can i"],
+      confusion: ["confused", "don't understand", "not clear", "help"],
+      unknown: [],
+    };
+
+    let responseMessage;
+
+    // Check for greetings
+    if (responseMessageMap.greeting.some((g) => userMessage.includes(g))) {
+      responseMessage = {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: from,
+        type: "interactive",
+        interactive: {
+          type: "list",
+          header: {
+            type: "text",
+            text: "Welcome to Travo 😊",
+          },
+          body: {
+            text: "How can we assist you today? Please choose from the options below:",
+          },
+          action: {
+            button: "View Options",
+            sections: [
+              {
+                title: "Options",
+                rows: [
+                  {
+                    id: "tour_packages",
+                    title: "1️⃣ Tour Packages",
+                    description: "Explore travel packages tailored for you.",
+                  },
+                  {
+                    id: "faqs",
+                    title: "2️⃣ FAQ",
+                    description: "Find answers to common questions.",
+                  },
+                  {
+                    id: "customer_support",
+                    title: "3️⃣ Customer Support",
+                    description: "Connect with our support team.",
+                  },
+                  {
+                    id: "payment_help",
+                    title: "4️⃣ Payment Help",
+                    description: "Need help with payment or booking?",
+                  },
+                  {
+                    id: "booking_help",
+                    title: "5️⃣ Booking Help",
+                    description: "Need help with booking?",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      };
+    } else {
+      // Determine response based on keywords
+      for (const [key, keywords] of Object.entries(responseMessageMap)) {
+        if (keywords.some((keyword) => userMessage.includes(keyword))) {
+          responseMessage = responses[key]; // Assuming responses is a predefined object containing appropriate messages
+          break;
+        }
+      }
+
+      // Default to unknown response if no match found
+      if (!responseMessage) {
+        responseMessage = responses.unknown;
+      }
+    }
+
+    console.log("responseMessage", responseMessage);
+
+    // Generic function to send a message
+    const sendMessage = async (data) => {
+      const config = {
+        method: "post",
+        url: `https://graph.facebook.com/${process.env.VERSION}/${process.env.PHONE_NUMBER_ID}/messages`,
+        headers: {
+          Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        data,
+      };
+
+      return await axios(config);
+    };
+
+    // Send list message or regular text response based on message type
+    if (messageType === "text") {
+      if (responseMessage.messaging_product) {
+        const response = await sendMessage(responseMessage);
+        console.log("List message sent successfully:", response.data);
+        return response.data;
+      } else {
+        const textMessage = {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: from,
+          type: "text",
+          text: { body: responseMessage },
+        };
+        const response = await sendMessage(textMessage);
+        console.log("Message sent successfully:", response.data);
+        return response.data;
+      }
+    }
+  } catch (error) {
+    console.error(
+      "Error in replyMessageStorage:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to send reply");
+  }
+}
+
+
+///helloo
+
+
+async function getImageTemplateReplyMessage(){
+
+console.log('hello',colors.magenta("helloooo"))
+
+  try {
+    const bookingDetails = {
+      packageName: "Bali Beach Getaway",
+      customerName: "John Doe",
+      checkIn: "2024-12-25",
+      checkOut: "2025-01-05",
+      roomType: "Deluxe Ocean View",
+      roomCount: 2,
+      totalPrice: 15000,
+      adultCount: 2,
+      adultPrice: 7500,
+      childCount: 1,
+      childPrice: 3000,
+      toddlerCount: 0,
+      toddlerPrice: 0,
+      infantCount: 0,
+      infantPrice: 0,
+      packageOption: "All Inclusive",
+      headerImageUrl:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWyjlP-bbnNr9mWSm4reG8khducnLTMrZrNw&s",
+    };
+
+    const {
+      packageName,
+      customerName,
+      checkIn,
+      checkOut,
+      roomType,
+      roomCount,
+      totalPrice,
+      adultCount,  
+      adultPrice,
+      childCount,
+      childPrice,
+      toddlerCount,
+      toddlerPrice,
+      infantCount,
+      infantPrice,
+      packageOption,
+      headerImageUrl,
+    } = bookingDetails;
+
+    const recipient = process.env.NEXT_PUBLIC_WHATSAPP_RECIPIENT_WAID;
+
+    return JSON.stringify({
+      messaging_product: "whatsapp",
+      to: 917736228299,
+      type: "template",
+      template: {
+        name: "booknow_reply_customers",
+        language: {
+          code: "en",
+        },
+        components: [
+          {
+            type: "header",
+            parameters: [
+              {
+                type: "image",
+                image: {
+                  link: headerImageUrl,
+                },
+              },
+            ],
+          },
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: `${packageName}` }, // {{1}} - Package Name
+              { type: "text", text: `${checkIn}` }, // {{2}} - Check-in Date
+              { type: "text", text: `${checkOut}` }, // {{3}} - Check-out Date
+              { type: "text", text: `${roomCount}` }, // {{4} - Room Count
+              { type: "text", text: `${roomType}` }, // {{5} - Room Type
+
+              { type: "text", text: `${adultCount}` }, // {{6} - Adult Count
+
+              { type: "text", text: `${childCount}` }, // {{7}- Child Count
+
+              { type: "text", text: `${toddlerCount}` }, // {{8}}- Toddler Count
+
+              { type: "text", text: `${infantCount}` }, // {{9}} Infant Count
+
+              { type: "text", text: "MYR" }, // {{11} - myr
+
+              { type: "text", text: `${totalPrice}` }, // {{12}}   Price
+            ],
+          },
+
+
+          {
+            type: "button",
+            sub_type: "quick_reply",
+            index: 0,
+            parameters: [{ type: "payload", payload: "Confirm Booking" }],
+          },
+          {
+            type: "button",
+            sub_type: "quick_reply",
+            index: 1,
+            parameters: [{ type: "payload", payload: "Cancel Inquiry" }],
+          }
+
+
+        ],
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 export {
@@ -409,4 +743,7 @@ export {
   getPackageDetailsInPdf,
   uploadMedia,
   sendLocationMessage,
+  getBookNowMessageTemplate,
+  getImageTemplateReplyMessage,
+  replyMessageStorage
 };

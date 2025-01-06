@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import axios from "axios";
 import mongoose from "mongoose";
 
-import { replyMessageStorage } from "./controllers/whatsappControllers.js";
 
 import User from "./models/userSchema.js";
 
@@ -55,7 +54,7 @@ app.get("/webhook", (req, res) => {
 
 
 app.post("/webhook", async (req, res) => {
-  const { body: bodyParam } = req; // Destructure to get body
+  const { body: bodyParam } = req; 
   console.log(JSON.stringify(bodyParam, null, 2));
 
   // Check if the request contains the expected object
@@ -71,13 +70,14 @@ app.post("/webhook", async (req, res) => {
     return res.status(400).send("Invalid payload structure");
   }
 
-  // Check if it's a message
+ 
   if (value.messages?.[0]) {
     const { phone_number_id: phoneNumberId, messages } = value;
     const { from: senderId, text: { body: msgBody }, type: messageType, id: messageId } = messages[0];
 
     console.log("Message ID:", messageId);
     console.log("Incoming message:", msgBody);
+
 
     const existingUser = await User.findOne({ senderId });
 
@@ -111,11 +111,26 @@ app.post("/webhook", async (req, res) => {
       await newUser.save();
       console.log("New user created:", newUser);
 
-      // Send the welcome message template
+      // Send the welcome message template 
       const responseTemplate = getWelcomeMessageTemplate(process.env.RECIPIENT_WAID, "User");
       const completedResponse = await sendMessage(responseTemplate);
       console.log("Welcome message sent to new user:", completedResponse);
     }
+
+
+    if (messageType === "button") {
+
+      console.log('button deteted...')
+      const { button: { payload } } = message;
+      console.log("Quick reply button clicked with payload:", payload);
+
+      const response = await handleQuickReply(payload, senderId);
+      console.log("Response for quick reply:", response);
+
+      return res.status(200).send("Quick reply button processed successfully");
+    }
+
+
 
     // Respond to the client
     return res.status(200).send("Webhook processed successfully");

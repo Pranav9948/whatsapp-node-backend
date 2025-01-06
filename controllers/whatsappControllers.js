@@ -8,11 +8,13 @@ import {
   getPackageDetailsInPdf,
   uploadMedia,
   sendLocationMessage,
+  getBookNowMessageTemplate,getImageTemplateReplyMessage,replyMessageStorage
+
+  
 } from "../Helpers/WhatsappHelper.js";
 import axios from "axios";
 
 const customerName = "Pranav";
-
 
 let responseMessage;
 
@@ -64,11 +66,19 @@ const getWelcomeMessage = async (req, res) => {
 
 const enquirePackageDetails = async (req, res) => {
   try {
-    console.log("tour", req.body);
-
     const { selectedPackage } = req.body;
 
-    const Package = selectedPackage[0];
+    console.log("selected package", selectedPackage);
+
+    const packagedetails = selectedPackage[0];
+
+    const Package = {
+      cost: 15000,
+      description:
+        "Experience the serene beauty of Langkawi's pristine beaches, lush forests, and iconic cable car ride.",
+      images:
+        "https://media-cdn.tripadvisor.com/media/photo-s/29/27/d6/07/berjaya-langkawi-resort.jpg",
+    };
 
     const response = getImageTemplatedMessage(
       process.env.RECIPIENT_WAID,
@@ -78,6 +88,33 @@ const enquirePackageDetails = async (req, res) => {
     console.log("response message", response);
 
     const completedResponse = sendMessage(response);
+
+    console.log("completedResponse", completedResponse);
+
+    return res.status(200).send("Message sent successfully.");
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+};
+
+const bookNow = async (req, res) => {
+  try {
+    console.log("tour", req.body);
+
+    const Packages = req.body.payload;
+
+    const response = await getBookNowMessageTemplate(
+      process.env.RECIPIENT_WAID,
+      Packages
+    );
+
+    console.log("response message", response);
+
+    const completedResponse = await sendMessage(response);
 
     console.log("completedResponse", completedResponse);
 
@@ -209,115 +246,29 @@ const shareLocation = async (req, res) => {
   }
 };
 
+const getReplyToCustomer = async (req,res) => {
 
+console.log('hello',colors.magenta("helloooo"))
 
-async function replyMessageStorage(userMessage, username, from, messageType) {
   try {
-    userMessage = userMessage?.toLowerCase() || "";
-
-    const responseMessageMap = {
-      greeting: ["hi", "hello", "hey", "heya", "hi there"],
-      thanks: ["thank you", "thanks", "thx", "thankyou", "much appreciated"],
-      appreciation: ["great", "amazing", "awesome", "fantastic", "good work"],
-      farewell: ["bye", "goodbye", "see you", "take care"],
-      inquiry: ["what", "how", "why", "where", "when", "can i"],
-      confusion: ["confused", "don't understand", "not clear", "help"],
-      unknown: []
-    };
-
-    let responseMessage;
-
-    // Check for greetings
-    if (responseMessageMap.greeting.some(g => userMessage.includes(g))) {
-      responseMessage = {
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: from,
-        type: "interactive",
-        interactive: {
-          type: "list",
-          header: {
-            type: "text",
-            text: "Welcome to Travo 😊",
-          },
-          body: {
-            text: "How can we assist you today? Please choose from the options below:",
-          },
-          action: {
-            button: "View Options",
-            sections: [
-              {
-                title: "Options",
-                rows: [
-                  { id: "tour_packages", title: "1️⃣ Tour Packages", description: "Explore travel packages tailored for you." },
-                  { id: "faqs", title: "2️⃣ FAQ", description: "Find answers to common questions." },
-                  { id: "customer_support", title: "3️⃣ Customer Support", description: "Connect with our support team." },
-                  { id: "payment_help", title: "4️⃣ Payment Help", description: "Need help with payment or booking?" },
-                  { id: "booking_help", title: "5️⃣ Booking Help", description: "Need help with booking?" },
-                ],
-              },
-            ],
-          },
-        },
-      };
-    } else {
-      // Determine response based on keywords
-      for (const [key, keywords] of Object.entries(responseMessageMap)) {
-        if (keywords.some(keyword => userMessage.includes(keyword))) {
-          responseMessage = responses[key]; // Assuming responses is a predefined object containing appropriate messages
-          break;
-        }
-      }
-
-      // Default to unknown response if no match found
-      if (!responseMessage) {
-        responseMessage = responses.unknown;
-      }
-    }
-
-    console.log("responseMessage", responseMessage);
-
-    // Generic function to send a message
-    const sendMessage = async (data) => {
-      const config = {
-        method: "post",
-        url: `https://graph.facebook.com/${process.env.VERSION}/${process.env.PHONE_NUMBER_ID}/messages`,
-        headers: {
-          Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        data,
-      };
-
-      return await axios(config);
-    };
-
-    // Send list message or regular text response based on message type
-    if (messageType === "text") {
-      if (responseMessage.messaging_product) {
-        const response = await sendMessage(responseMessage);
-        console.log("List message sent successfully:", response.data);
-        return response.data;
-      } else {
-        const textMessage = {
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
-          to: from,
-          type: "text",
-          text: { body: responseMessage },
-        };
-        const response = await sendMessage(textMessage);
-        console.log("Message sent successfully:", response.data);
-        return response.data;
-      }
-    }
     
-  } catch (error) {
-    console.error("Error in replyMessageStorage:", error.response?.data || error.message);
-    throw new Error("Failed to send reply");
-  }
-}
+   const responseTemplate  = await getImageTemplateReplyMessage()
 
+   const completedResponse = await sendMessage(responseTemplate);
+
+   console.log("completedResponse", completedResponse);
+
+   return res.status(200).send("Message sent successfully.");
+
+
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+};
 
 
 
@@ -328,5 +279,7 @@ export {
   dateTesting,
   enquirePackageDetailsPdf,
   shareLocation,
-  replyMessageStorage,
+  getImageTemplateReplyMessage,  
+  bookNow,
+  getReplyToCustomer,
 };
