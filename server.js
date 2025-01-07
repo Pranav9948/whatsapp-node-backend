@@ -104,60 +104,7 @@ app.post("/webhook", async (req, res) => {
     console.log("Message ID:", messageId);
     console.log("Incoming message:", msgBody);
 
-    if (!msgBody) {
-      console.error("Message body is undefined.");
-      return res.status(400).send("Message body is undefined");
-    }
-
-    if (msgBody.trim().toLowerCase() === "confirm booking") {
-      const responseTemplate = await BookingConfirmationTemplate();
-
-      console.log("responseTemplate", responseTemplate);
-
-      const completedResponse = await sendMessage(responseTemplate);
-
-      return res.status(200).send("Confirmation message sent successfully");
-    }
-
-    // Handle "Cancel Inquiry" message
-    if (msgBody.trim().toLowerCase() === "cancel inquiry") {
-      const responseTemplate = await BookingCancellationTemplate();
-
-      console.log("responseTemplate", responseTemplate);
-
-      const completedResponse = await sendMessage(responseTemplate);
-
-      return res.status(200).send("Cancellation message sent successfully");
-    }
-
-    // Analyzing message content
-
-    const interestPattern = /^Hello, I am interested in booking/i;
-
-    // Step 2: Check if all required fields are present
-    const hasAllDetails = (msgBody) =>
-      requiredFields.every((field) => msgBody.includes(field));
-
-    if (interestPattern.test(msgBody)) {
-      // Scenario 1: All required fields are present
-      if (hasAllDetails(msgBody)) {
-        console.log("Detected Scenario 1: All Details Filled");
-
-        await getReplyToCustomer();
-
-        return res.status(200).send("Message sent successfully");
-      } else {
-        // Scenario 2: Missing Details
-        console.log("Detected Scenario 2: Missing Details");
-
-        await getTemplateMissingCustomer();
-
-        return res.status(200).send("Message sent successfully");
-      }
-    } else {
-      // No match if the initial phrase isn't present
-      console.log("No condition matched...");
-    }
+    
 
     const existingUser = await User.findOne({ senderId });
 
@@ -176,6 +123,64 @@ app.post("/webhook", async (req, res) => {
       existingUser.messageIds.push(messageId);
       await existingUser.save();
       console.log("New message ID added for existing user:", existingUser);
+
+
+      if (!msgBody) {
+        console.error("Message body is undefined.");
+        return res.status(400).send("Message body is undefined");
+      }
+  
+      if (msgBody.trim().toLowerCase() === "confirm booking") {
+        const responseTemplate = await BookingConfirmationTemplate();
+  
+        console.log("responseTemplate", responseTemplate);
+  
+        const completedResponse = await sendMessage(responseTemplate);
+  
+        return res.status(200).send("Confirmation message sent successfully");
+      }
+  
+      // Handle "Cancel Inquiry" message
+      if (msgBody.trim().toLowerCase() === "cancel inquiry") {
+        const responseTemplate = await BookingCancellationTemplate();
+  
+        console.log("responseTemplate", responseTemplate);
+  
+        const completedResponse = await sendMessage(responseTemplate);
+  
+        return res.status(200).send("Cancellation message sent successfully");
+      }
+  
+      // Analyzing message content
+  
+      const interestPattern = /^Hello, I am interested in booking/i;
+  
+      // Step 2: Check if all required fields are present
+      const hasAllDetails = (msgBody) =>
+        requiredFields.every((field) => msgBody.includes(field));
+  
+      if (interestPattern.test(msgBody)) {
+        // Scenario 1: All required fields are present
+        if (hasAllDetails(msgBody)) {
+          console.log("Detected Scenario 1: All Details Filled");
+  
+          await getReplyToCustomer();
+  
+          return res.status(200).send("Message sent successfully");
+        } else {
+          // Scenario 2: Missing Details
+          console.log("Detected Scenario 2: Missing Details");
+  
+          await getTemplateMissingCustomer();
+  
+          return res.status(200).send("Message sent successfully");
+        }
+      } else {
+        // No match if the initial phrase isn't present
+        console.log("No condition matched...");
+      }
+
+      
 
       // Handle reply logic for existing users
       const response = await replyMessageStorage(
