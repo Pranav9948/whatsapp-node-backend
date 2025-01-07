@@ -16,7 +16,11 @@ import {
   replyMessageStorage,
   sendMessage,
 } from "./Helpers/WhatsappHelper.js";
-import { getReplyToCustomer, getTemplateMissingCustomer, sendQuickReplyButtonMessages } from "./controllers/whatsappControllers.js";
+import {
+  getReplyToCustomer,
+  getTemplateMissingCustomer,
+  sendQuickReplyButtonMessages,
+} from "./controllers/whatsappControllers.js";
 
 const app = express();
 const PORT = process.env.PORT || 8500;
@@ -32,6 +36,19 @@ connectDB();
 
 const myToken = process.env.MYTOKEN;
 const processedMessages = {};
+
+const requiredFields = [
+  "- Package Name:",
+  "- Check-in Date:",
+  "- Check-out Date:",
+  "- Number of Rooms:",
+  "- Room Type:",
+  "- Adults:",
+  "- Children:",
+  "- Toddlers:",
+  "- Infants:",
+  "- Total Price:",
+];
 
 app.use("/api/whatsapp", whatsappRoutes);
 
@@ -113,28 +130,34 @@ app.post("/webhook", async (req, res) => {
       return res.status(200).send("Cancellation message sent successfully");
     }
 
+    // Analyzing message content
 
+    const interestPattern = /^Hello, I am interested in booking/i;
 
-  // Analyzing message content
+    // Step 2: Check if all required fields are present
+    const hasAllDetails = (msgBody) =>
+      requiredFields.every((field) => msgBody.includes(field));
 
-  const allDetailsPattern = /package.+?from.+?to.+?require.+?rooms/i;
-  const missingDetailsPattern = /interested.+?package/i;
+    if (interestPattern.test(msgBody)) {
+      // Scenario 1: All required fields are present
+      if (hasAllDetails(msgBody)) {
+        console.log("Detected Scenario 1: All Details Filled");
 
+        await getReplyToCustomer();
 
-  if (allDetailsPattern.test(msgBody)) {
-    console.log("Detected Scenario 1: All Details Filled");
-   
-     await getReplyToCustomer()
+        return res.status(200).send("Message sent successfully");
+      } else {
+        // Scenario 2: Missing Details
+        console.log("Detected Scenario 2: Missing Details");
 
-  } else if (missingDetailsPattern.test(msgBody)) {
-    console.log("Detected Scenario 2: Missing Details");
-   
-    await getTemplateMissingCustomer()
-  } 
+        await getTemplateMissingCustomer();
 
-
-
-
+        return res.status(200).send("Message sent successfully");
+      }
+    } else {
+      // No match if the initial phrase isn't present
+      console.log("No condition matched...");
+    }
 
     const existingUser = await User.findOne({ senderId });
 
