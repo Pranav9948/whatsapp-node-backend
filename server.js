@@ -14,7 +14,7 @@ import {
   BookingConfirmationTemplate,
   getWelcomeMessageTemplate,
   replyMessageStorage,
-  sendMessage,
+  sendMessage,getSenderandMessageDetails
 } from "./Helpers/WhatsappHelper.js";
 import {
   getReplyToCustomer,
@@ -104,8 +104,6 @@ app.post("/webhook", async (req, res) => {
     console.log("Message ID:", messageId);
     console.log("Incoming message:", msgBody);
 
-    
-
     const existingUser = await User.findOne({ senderId });
 
     if (existingUser) {
@@ -124,63 +122,60 @@ app.post("/webhook", async (req, res) => {
       await existingUser.save();
       console.log("New message ID added for existing user:", existingUser);
 
-
       if (!msgBody) {
         console.error("Message body is undefined.");
         return res.status(400).send("Message body is undefined");
       }
-  
+
       if (msgBody.trim().toLowerCase() === "confirm booking") {
-        const responseTemplate = await BookingConfirmationTemplate();
-  
+        const responseTemplate = await BookingConfirmationTemplate(senderId,msgBody);
+
         console.log("responseTemplate", responseTemplate);
-  
+
         const completedResponse = await sendMessage(responseTemplate);
-  
+
         return res.status(200).send("Confirmation message sent successfully");
       }
-  
+
       // Handle "Cancel Inquiry" message
       if (msgBody.trim().toLowerCase() === "cancel inquiry") {
-        const responseTemplate = await BookingCancellationTemplate();
-  
+        const responseTemplate = await BookingCancellationTemplate(senderId,msgBody);
+
         console.log("responseTemplate", responseTemplate);
-  
+
         const completedResponse = await sendMessage(responseTemplate);
-  
+
         return res.status(200).send("Cancellation message sent successfully");
       }
-  
+
       // Analyzing message content
-  
+
       const interestPattern = /^Hello, I am interested in booking/i;
-  
+
       // Step 2: Check if all required fields are present
       const hasAllDetails = (msgBody) =>
         requiredFields.every((field) => msgBody.includes(field));
-  
+
       if (interestPattern.test(msgBody)) {
         // Scenario 1: All required fields are present
         if (hasAllDetails(msgBody)) {
           console.log("Detected Scenario 1: All Details Filled");
-  
-          await getReplyToCustomer();
-  
+
+          await getReplyToCustomer(req,res,senderId,msgBody)
+
           return res.status(200).send("Message sent successfully");
         } else {
           // Scenario 2: Missing Details
           console.log("Detected Scenario 2: Missing Details");
-  
-          await getTemplateMissingCustomer();
-  
+
+          await getTemplateMissingCustomer(req,res,senderId,msgBody);
+
           return res.status(200).send("Message sent successfully");
         }
       } else {
         // No match if the initial phrase isn't present
         console.log("No condition matched...");
       }
-
-      
 
       // Handle reply logic for existing users
       const response = await replyMessageStorage(
@@ -206,7 +201,7 @@ app.post("/webhook", async (req, res) => {
 
       // Send the welcome message template
       const responseTemplate = getWelcomeMessageTemplate(
-        process.env.RECIPIENT_WAID,
+        senderId,
         "User"
       );
       const completedResponse = await sendMessage(responseTemplate);
@@ -228,6 +223,5 @@ app.post("/webhook", async (req, res) => {
   return res.status(400).send("Unrecognized event type");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+
+

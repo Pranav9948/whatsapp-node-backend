@@ -8,11 +8,14 @@ import {
   getPackageDetailsInPdf,
   uploadMedia,
   sendLocationMessage,
-  getBookNowMessageTemplate,getImageTemplateReplyMessage,replyMessageStorage,
-  getTextMessageInput,BookingConfirmationTemplate,BookingCancellationTemplate,
+  getBookNowMessageTemplate,
+  getImageTemplateReplyMessage,
+  replyMessageStorage,
+  getTextMessageInput,
+  BookingConfirmationTemplate,
+  BookingCancellationTemplate,
   missingTemplateReplyMessage,
-
-  
+  getSenderandMessageDetails,
 } from "../Helpers/WhatsappHelper.js";
 import axios from "axios";
 
@@ -248,23 +251,23 @@ const shareLocation = async (req, res) => {
   }
 };
 
-const getReplyToCustomer = async (req,res) => {
-
-
-
-console.log('hello',colors.magenta("helloooo"))
-
+const getReplyToCustomer = async (req, res, senderId, msgBody) => {
   try {
+    const responseTemplate = await getImageTemplateReplyMessage(
+      senderId,
+      msgBody
+    );
+
+    console.log('responseTemplate',colors.cyan(responseTemplate))
+
+
     
-   const responseTemplate  = await getImageTemplateReplyMessage()
 
-   const completedResponse = await sendMessage(responseTemplate);
+    const completedResponse = await sendMessage(responseTemplate);
 
-   console.log("completedResponse", completedResponse);
+    console.log("completedResponse", colors.magenta(completedResponse));
 
-   return res.status(200).send("Message sent successfully.");
-
-
+    return res.status(200).send("Message sent successfully.");
   } catch (error) {
     console.error(
       "Error sending message:",
@@ -274,25 +277,16 @@ console.log('hello',colors.magenta("helloooo"))
   }
 };
 
-
-
 async function sendQuickReplyButtonMessages(to, message) {
-
-
-  console.log('to',to)
-  console.log('message',message)
-
+  console.log("to", to);
+  console.log("message", message);
 
   try {
-    
+    const response = await getTextMessageInput(to, message);
 
-   const response= await getTextMessageInput(to, message)
+    console.log("response here", response);
 
-   console.log("response here", response);
-
-   const completedResponse = await sendMessage(response);
-
-
+    const completedResponse = await sendMessage(response);
   } catch (error) {
     console.log("err".america, error.config.data);
 
@@ -318,105 +312,67 @@ async function sendQuickReplyButtonMessages(to, message) {
       }`
     );
   }
-
-  
-
 }
 
+async function getBookingConfirmationMessage(req, res) {
+  try {
+    const responseTemplate = await BookingConfirmationTemplate();
 
-async function getBookingConfirmationMessage(req,res){
+    console.log("responseTemplate", responseTemplate);
 
+    const completedResponse = await sendMessage(responseTemplate);
 
+    console.log("completedResponse", completedResponse);
 
-  
-  
-    try {
-      
-     const responseTemplate  = await BookingConfirmationTemplate()
+    return res.status(200).send("Message sent successfully.");
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+}
 
-     console.log("responseTemplate", responseTemplate)
-  
-     const completedResponse = await sendMessage(responseTemplate);
-  
-     console.log("completedResponse", completedResponse);
-  
-     return res.status(200).send("Message sent successfully.");
-  
-  
-    } catch (error) {
-      console.error(
-        "Error sending message:",
-        error.response?.data || error.message
-      );
-      return res.status(500).send("Failed to send message.");
-    }
-  };
+async function getBookingCancellationMessage(req, res) {
+  try {
+    const responseTemplate = await BookingCancellationTemplate();
 
+    console.log("responseTemplate", responseTemplate);
 
+    const completedResponse = await sendMessage(responseTemplate);
 
-  async function getBookingCancellationMessage(req,res){
+    console.log("completedResponse", completedResponse);
 
+    return res.status(200).send("Message sent successfully.");
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+}
 
+const getTemplateMissingCustomer = async (req, res, senderId, msgBody) => {
+ 
 
-  
-  
-    try {
-      
-     const responseTemplate  = await BookingCancellationTemplate()
+  try {
+    const responseTemplate = await missingTemplateReplyMessage( senderId, msgBody);
 
-     console.log("responseTemplate", responseTemplate)
-  
-     const completedResponse = await sendMessage(responseTemplate);
-  
-     console.log("completedResponse", completedResponse);
-  
-     return res.status(200).send("Message sent successfully.");
-  
-  
-    } catch (error) {
-      console.error(
-        "Error sending message:",
-        error.response?.data || error.message
-      );
-      return res.status(500).send("Failed to send message.");
-    }
-  };
+    const completedResponse = await sendMessage(responseTemplate);
 
+    console.log("completedResponse", completedResponse);
 
-
-
-
-  const getTemplateMissingCustomer = async (req,res) => {
-
-
-
-    console.log('hello',colors.magenta("helloooo"))
-    
-      try {
-        
-       const responseTemplate  = await missingTemplateReplyMessage()
-    
-       const completedResponse = await sendMessage(responseTemplate);
-    
-       console.log("completedResponse", completedResponse);
-    
-       return res.status(200).send("Message sent successfully.");
-    
-    
-      } catch (error) {
-        console.error(
-          "Error sending message:",
-          error.response?.data || error.message
-        );
-        return res.status(500).send("Failed to send message.");
-      }
-    };
-
-
-
-  
-
-
+    return res.status(200).send("Message sent successfully.");
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+};
 
 export {
   getWelcomeMessage,
@@ -425,7 +381,11 @@ export {
   dateTesting,
   enquirePackageDetailsPdf,
   shareLocation,
-  getImageTemplateReplyMessage,  
+  getImageTemplateReplyMessage,
   bookNow,
-  getReplyToCustomer,sendQuickReplyButtonMessages,getBookingConfirmationMessage,getBookingCancellationMessage,getTemplateMissingCustomer
+  getReplyToCustomer,
+  sendQuickReplyButtonMessages,
+  getBookingConfirmationMessage,
+  getBookingCancellationMessage,
+  getTemplateMissingCustomer,
 };
