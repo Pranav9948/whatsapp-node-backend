@@ -16,7 +16,7 @@ import {
   replyMessageStorage,
   sendMessage,
 } from "./Helpers/WhatsappHelper.js";
-import { sendQuickReplyButtonMessages } from "./controllers/whatsappControllers.js";
+import { getReplyToCustomer, getTemplateMissingCustomer, sendQuickReplyButtonMessages } from "./controllers/whatsappControllers.js";
 
 const app = express();
 const PORT = process.env.PORT || 8500;
@@ -112,6 +112,29 @@ app.post("/webhook", async (req, res) => {
 
       return res.status(200).send("Cancellation message sent successfully");
     }
+
+
+
+  // Analyzing message content
+
+  const allDetailsPattern = /package.+?from.+?to.+?require.+?rooms/i;
+  const missingDetailsPattern = /interested.+?package/i;
+
+
+  if (allDetailsPattern.test(msgBody)) {
+    console.log("Detected Scenario 1: All Details Filled");
+   
+     await getReplyToCustomer()
+
+  } else if (missingDetailsPattern.test(msgBody)) {
+    console.log("Detected Scenario 2: Missing Details");
+   
+    await getTemplateMissingCustomer()
+  } 
+
+
+
+
 
     const existingUser = await User.findOne({ senderId });
 

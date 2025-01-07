@@ -1,6 +1,6 @@
    
 import express from 'express';
-import  {getWelcomeMessage,getReplyToCustomer,getBookingConfirmationMessage,enquirePackageDetails,getPackageVideos,dateTesting,enquirePackageDetailsPdf,shareLocation,bookNow,getBookingCancellationMessage} from '../controllers/whatsappControllers.js'
+import  {getWelcomeMessage,getReplyToCustomer,getTemplateMissingCustomer,getBookingConfirmationMessage,enquirePackageDetails,getPackageVideos,dateTesting,enquirePackageDetailsPdf,shareLocation,bookNow,getBookingCancellationMessage} from '../controllers/whatsappControllers.js'
 
 
 const router = express.Router();
@@ -18,6 +18,9 @@ router.post('/book-now',bookNow)
 
 router.post('/date-testing',dateTesting)
 router.post('/get-package-pdf',enquirePackageDetailsPdf)
+
+
+router.post('/get-template-missing-templateDetails',getTemplateMissingCustomer)
 
 router.post('/get-image-template-reply-message',getReplyToCustomer)
 

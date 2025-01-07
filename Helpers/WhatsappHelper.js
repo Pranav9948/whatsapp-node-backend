@@ -62,7 +62,7 @@ function getImageTemplatedMessage(recipient, tourPackage) {
   return JSON.stringify({
     messaging_product: "whatsapp",
     to: recipient,
-    type: "template",   
+    type: "template",
     template: {
       name: "tour_package_enquiry",
       language: {
@@ -169,14 +169,6 @@ function getBookNowMessageTemplate(recipient, bookingDetails) {
   });
 }
 
-
-
-
-
-
-
-
-
 function getWelcomeMessageTemplate(recipient, recipientName) {
   console.log("recipientName", recipientName);
   return JSON.stringify({
@@ -216,9 +208,8 @@ function getWelcomeMessageTemplate(recipient, recipientName) {
 }
 
 function getVideoMessageInput(recipient, customerName, packageDetails) {
+  console.log("packageDetails", colors.magenta(packageDetails));
 
-  console.log("packageDetails",colors.magenta(packageDetails));
-  
   return JSON.stringify({
     messaging_product: "whatsapp",
     to: recipient,
@@ -440,7 +431,7 @@ async function sendLocationMessage(recipient, customerName, pickupDetails) {
               text: customerName,
             },
             {
-              type: "text", 
+              type: "text",
               text: pickupDetails.tripName,
             },
             {
@@ -483,7 +474,6 @@ async function replyMessageStorage(userMessage, username, from, messageType) {
       confusion: ["confused", "don't understand", "not clear", "help"],
       unknown: [],
     };
-
 
     const responses = {
       greeting: "Hello! How can we assist you today?",
@@ -610,13 +600,10 @@ async function replyMessageStorage(userMessage, username, from, messageType) {
   }
 }
 
-
 ///helloo
 
-
-async function getImageTemplateReplyMessage(){
-
-console.log('hello',colors.magenta("helloooo"))
+async function getImageTemplateReplyMessage() {
+  console.log("hello", colors.magenta("helloooo"));
 
   try {
     const bookingDetails = {
@@ -648,7 +635,7 @@ console.log('hello',colors.magenta("helloooo"))
       roomType,
       roomCount,
       totalPrice,
-      adultCount,  
+      adultCount,
       adultPrice,
       childCount,
       childPrice,
@@ -706,7 +693,6 @@ console.log('hello',colors.magenta("helloooo"))
             ],
           },
 
-
           {
             type: "button",
             sub_type: "quick_reply",
@@ -718,9 +704,7 @@ console.log('hello',colors.magenta("helloooo"))
             sub_type: "quick_reply",
             index: 1,
             parameters: [{ type: "payload", payload: "Cancel Inquiry" }],
-          }
-
-
+          },
         ],
       },
     });
@@ -731,18 +715,12 @@ console.log('hello',colors.magenta("helloooo"))
     );
     return res.status(500).send("Failed to send message.");
   }
-};
+}
 
-
-
-async function BookingConfirmationTemplate(){
-
-  console.log(colors.cyan("reaching...."))
+async function BookingConfirmationTemplate() {
+  console.log(colors.cyan("reaching...."));
 
   try {
-    
-
-
     return JSON.stringify({
       messaging_product: "whatsapp",
       to: 917736228299,
@@ -766,14 +744,8 @@ async function BookingConfirmationTemplate(){
           },
           {
             type: "body",
-            parameters: [
-             
-            ],
+            parameters: [],
           },
-
-
-          
-
         ],
       },
     });
@@ -784,20 +756,10 @@ async function BookingConfirmationTemplate(){
     );
     return res.status(500).send("Failed to send message.");
   }
-
-
 }
 
-
-
-async function BookingCancellationTemplate(){
-
-
-
+async function BookingCancellationTemplate() {
   try {
-    
-
-
     return JSON.stringify({
       messaging_product: "whatsapp",
       to: 917736228299,
@@ -821,14 +783,8 @@ async function BookingCancellationTemplate(){
           },
           {
             type: "body",
-            parameters: [
-             
-            ],
+            parameters: [],
           },
-
-
-          
-
         ],
       },
     });
@@ -839,18 +795,114 @@ async function BookingCancellationTemplate(){
     );
     return res.status(500).send("Failed to send message.");
   }
-
-
 }
 
+async function missingTemplateReplyMessage() {
+  console.log("hello", colors.magenta("helloooo"));
 
+  try {
+    const bookingDetails = {
+      packageName: "Bali Beach Getaway",
+      customerName: "John Doe",
+      checkIn: "2024-12-25",
+      checkOut: "2025-01-05",
+      roomType: "Not Provided",
+      roomCount: 2,
+      totalPrice: 15000,
+      adultCount: "Not Provided",
 
+      childCount: "Not Provided",
 
+      toddlerCount: "Not Provided",
 
+      infantCount: "Not Provided",
 
+      packageOption: "All Inclusive",
+      headerImageUrl:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWyjlP-bbnNr9mWSm4reG8khducnLTMrZrNw&s",
+    };
 
+    const {
+      packageName,
+      customerName,
+      checkIn,
+      checkOut,
+      roomType,
+      roomCount,
+      totalPrice,
+      adultCount,
+      adultPrice,
+      childCount,
+      childPrice,
+      toddlerCount,
+      toddlerPrice,
+      infantCount,
+      infantPrice,
+      packageOption,
+      headerImageUrl,
+    } = bookingDetails;
 
+    const recipient = process.env.NEXT_PUBLIC_WHATSAPP_RECIPIENT_WAID;
 
+    return JSON.stringify({
+      messaging_product: "whatsapp",
+      to: 917736228299,
+      type: "template",
+      template: {
+        name: "booknow_flow_not_completed",
+        language: {
+          code: "en",
+        },
+        components: [
+          {
+            type: "header",
+            parameters: [
+              {
+                type: "image",
+                image: {
+                  link: headerImageUrl,
+                },
+              },
+            ],
+          },
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: `${packageName}` }, // {{1}} - Package Name
+              { type: "text", text: `${checkIn}` }, // {{2}} - Check-in Date
+              { type: "text", text: `${checkOut}` }, // {{3}} - Check-out Date
+              { type: "text", text: `${roomCount}` }, // {{4} - Room Count
+              { type: "text", text: `${roomType}` }, // {{5} - Room Type
+
+              { type: "text", text: `${adultCount}` }, // {{6} - Adult Count
+
+              { type: "text", text: `${childCount}` }, // {{7}- Child Count
+
+              { type: "text", text: `${toddlerCount}` }, // {{8}}- Toddler Count
+
+              { type: "text", text: `${infantCount}` }, // {{9}} Infant Count
+
+              
+            ],
+          },
+
+          {
+            type: "button",
+            sub_type: "quick_reply",
+            index: 0,
+            parameters: [{ type: "payload", payload: "Select Missing Details" }],
+          }
+        ],
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+}
 
 export {
   sendMessage,
@@ -864,5 +916,8 @@ export {
   sendLocationMessage,
   getBookNowMessageTemplate,
   getImageTemplateReplyMessage,
-  replyMessageStorage,BookingConfirmationTemplate,BookingCancellationTemplate
+  replyMessageStorage,
+  BookingConfirmationTemplate,
+  BookingCancellationTemplate,
+  missingTemplateReplyMessage,
 };
