@@ -735,8 +735,113 @@ console.log('hello',colors.magenta("helloooo"))
 
 
 
+async function BookingConfirmationTemplate(){
+
+  console.log(colors.cyan("reaching...."))
+
+  try {
+    
 
 
+    return JSON.stringify({
+      messaging_product: "whatsapp",
+      to: 917736228299,
+      type: "template",
+      template: {
+        name: "booking_confirmation_template",
+        language: {
+          code: "en",
+        },
+        components: [
+          {
+            type: "header",
+            parameters: [
+              {
+                type: "image",
+                image: {
+                  link: "https://t4.ftcdn.net/jpg/00/65/48/25/360_F_65482539_C0ZozE5gUjCafz7Xq98WB4dW6LAhqKfs.jpg",
+                },
+              },
+            ],
+          },
+          {
+            type: "body",
+            parameters: [
+             
+            ],
+          },
+
+
+          
+
+        ],
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+
+
+}
+
+
+
+async function BookingCancellationTemplate(){
+
+
+
+  try {
+    
+
+
+    return JSON.stringify({
+      messaging_product: "whatsapp",
+      to: 917736228299,
+      type: "template",
+      template: {
+        name: "cancellation_template ",
+        language: {
+          code: "en",
+        },
+        components: [
+          {
+            type: "header",
+            parameters: [
+              {
+                type: "image",
+                image: {
+                  link: "https://img.freepik.com/premium-vector/sad-person-sitting-crying-near-suitcases-travelling-ticket-with-cancelled-mark_165932-811.jpg",
+                },
+              },
+            ],
+          },
+          {
+            type: "body",
+            parameters: [
+             
+            ],
+          },
+
+
+          
+
+        ],
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Error sending message:",
+      error.response?.data || error.message
+    );
+    return res.status(500).send("Failed to send message.");
+  }
+
+
+}
 
 
 
@@ -759,5 +864,5 @@ export {
   sendLocationMessage,
   getBookNowMessageTemplate,
   getImageTemplateReplyMessage,
-  replyMessageStorage,
+  replyMessageStorage,BookingConfirmationTemplate,BookingCancellationTemplate
 };

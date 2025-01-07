@@ -1,6 +1,6 @@
    
 import express from 'express';
-import  {getWelcomeMessage,getReplyToCustomer,enquirePackageDetails,getPackageVideos,dateTesting,enquirePackageDetailsPdf,shareLocation,bookNow} from '../controllers/whatsappControllers.js'
+import  {getWelcomeMessage,getReplyToCustomer,getBookingConfirmationMessage,enquirePackageDetails,getPackageVideos,dateTesting,enquirePackageDetailsPdf,shareLocation,bookNow,getBookingCancellationMessage} from '../controllers/whatsappControllers.js'
 
 
 const router = express.Router();
@@ -20,6 +20,11 @@ router.post('/date-testing',dateTesting)
 router.post('/get-package-pdf',enquirePackageDetailsPdf)
 
 router.post('/get-image-template-reply-message',getReplyToCustomer)
+
+
+router.post('/booking-confirmationMessage',getBookingConfirmationMessage)
+
+router.post('/booking-cancellationMessage',getBookingCancellationMessage)
 
 
 export default router

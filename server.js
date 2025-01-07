@@ -6,15 +6,15 @@ import dotenv from "dotenv";
 import axios from "axios";
 import mongoose from "mongoose";
 
-
 import User from "./models/userSchema.js";
 
 import connectDB from "./db/db.js";
 import {
+  BookingCancellationTemplate,
+  BookingConfirmationTemplate,
   getWelcomeMessageTemplate,
   replyMessageStorage,
   sendMessage,
-  
 } from "./Helpers/WhatsappHelper.js";
 import { sendQuickReplyButtonMessages } from "./controllers/whatsappControllers.js";
 
@@ -55,9 +55,8 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-
 app.post("/webhook", async (req, res) => {
-  const { body: bodyParam } = req; 
+  const { body: bodyParam } = req;
   console.log(JSON.stringify(bodyParam, null, 2));
 
   // Check if the request contains the expected object
@@ -73,11 +72,8 @@ app.post("/webhook", async (req, res) => {
     return res.status(400).send("Invalid payload structure");
   }
 
- 
   if (value.messages?.[0]) {
-    const { phone_number_id: phoneNumberId, messages } = value;  
-   
-
+    const { phone_number_id: phoneNumberId, messages } = value;
 
     const { from: senderId, type: messageType, id: messageId } = messages[0];
 
@@ -96,40 +92,26 @@ app.post("/webhook", async (req, res) => {
       return res.status(400).send("Message body is undefined");
     }
 
-
     if (msgBody.trim().toLowerCase() === "confirm booking") {
-      const confirmationMessage = `
-        🌟 Thank you for confirming your interest in our package!
+      const responseTemplate = await BookingConfirmationTemplate();
 
-        A travel specialist will be in touch shortly to discuss your booking and answer any questions you may have. 
-        If you need immediate assistance, feel free to reach out to us at 📞 +60179819827 
+      console.log("responseTemplate", responseTemplate);
 
-        We're excited to help you plan your trip! ✈️
-      `;
+      const completedResponse = await sendMessage(responseTemplate);
 
-      await sendQuickReplyButtonMessages(senderId, confirmationMessage);
-      console.log("Confirmation message sent:", confirmationMessage);
       return res.status(200).send("Confirmation message sent successfully");
     }
 
     // Handle "Cancel Inquiry" message
     if (msgBody.trim().toLowerCase() === "cancel inquiry") {
-      const cancellationMessage = `
-        ❌ We're sorry to hear that you want to cancel your inquiry.
+      const responseTemplate = await BookingCancellationTemplate();
 
-        If there's anything we can do to assist you or improve your experience, please let us know. 
-        Your feedback is valuable to us!
+      console.log("responseTemplate", responseTemplate);
 
-        Thank you for considering our services. If you have any other questions or need assistance, feel free to reach out. 📞 +60179819827
-      `;
+      const completedResponse = await sendMessage(responseTemplate);
 
-      // Send the cancellation message
-      await sendQuickReplyButtonMessages(senderId, cancellationMessage);
-      console.log("Cancellation message sent:", cancellationMessage);
       return res.status(200).send("Cancellation message sent successfully");
     }
-
-
 
     const existingUser = await User.findOne({ senderId });
 
@@ -138,7 +120,9 @@ app.post("/webhook", async (req, res) => {
 
       // Check if the messageId is already in the messageIds array
       if (existingUser.messageIds.includes(messageId)) {
-        console.log("Message ID already exists for this user. No further actions will be taken.");
+        console.log(
+          "Message ID already exists for this user. No further actions will be taken."
+        );
         return res.status(200).send("Message ID already exists"); // Respond to the client
       }
 
@@ -148,12 +132,18 @@ app.post("/webhook", async (req, res) => {
       console.log("New message ID added for existing user:", existingUser);
 
       // Handle reply logic for existing users
-      const response = await replyMessageStorage(msgBody, "User", senderId, messageType);
+      const response = await replyMessageStorage(
+        msgBody,
+        "User",
+        senderId,
+        messageType
+      );
       console.log("Response for existing user:", response);
-
     } else {
       // New user case
-      console.log("New user detected. Creating user and sending welcome message.");
+      console.log(
+        "New user detected. Creating user and sending welcome message."
+      );
 
       const newUser = new User({
         senderId,
@@ -163,15 +153,14 @@ app.post("/webhook", async (req, res) => {
       await newUser.save();
       console.log("New user created:", newUser);
 
-      // Send the welcome message template 
-      const responseTemplate = getWelcomeMessageTemplate(process.env.RECIPIENT_WAID, "User");
+      // Send the welcome message template
+      const responseTemplate = getWelcomeMessageTemplate(
+        process.env.RECIPIENT_WAID,
+        "User"
+      );
       const completedResponse = await sendMessage(responseTemplate);
       console.log("Welcome message sent to new user:", completedResponse);
     }
-
-
-   
-
 
     // Respond to the client
     return res.status(200).send("Webhook processed successfully");
@@ -187,7 +176,6 @@ app.post("/webhook", async (req, res) => {
   // If no recognizable event type
   return res.status(400).send("Unrecognized event type");
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

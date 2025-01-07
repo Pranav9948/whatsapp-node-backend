@@ -9,7 +9,7 @@ import {
   uploadMedia,
   sendLocationMessage,
   getBookNowMessageTemplate,getImageTemplateReplyMessage,replyMessageStorage,
-  getTextMessageInput
+  getTextMessageInput,BookingConfirmationTemplate,BookingCancellationTemplate
 
   
 } from "../Helpers/WhatsappHelper.js";
@@ -323,6 +323,69 @@ async function sendQuickReplyButtonMessages(to, message) {
 }
 
 
+async function getBookingConfirmationMessage(req,res){
+
+
+
+  
+  
+    try {
+      
+     const responseTemplate  = await BookingConfirmationTemplate()
+
+     console.log("responseTemplate", responseTemplate)
+  
+     const completedResponse = await sendMessage(responseTemplate);
+  
+     console.log("completedResponse", completedResponse);
+  
+     return res.status(200).send("Message sent successfully.");
+  
+  
+    } catch (error) {
+      console.error(
+        "Error sending message:",
+        error.response?.data || error.message
+      );
+      return res.status(500).send("Failed to send message.");
+    }
+  };
+
+
+
+  async function getBookingCancellationMessage(req,res){
+
+
+
+  
+  
+    try {
+      
+     const responseTemplate  = await BookingCancellationTemplate()
+
+     console.log("responseTemplate", responseTemplate)
+  
+     const completedResponse = await sendMessage(responseTemplate);
+  
+     console.log("completedResponse", completedResponse);
+  
+     return res.status(200).send("Message sent successfully.");
+  
+  
+    } catch (error) {
+      console.error(
+        "Error sending message:",
+        error.response?.data || error.message
+      );
+      return res.status(500).send("Failed to send message.");
+    }
+  };
+
+
+
+  
+
+
 
 export {
   getWelcomeMessage,
@@ -333,5 +396,5 @@ export {
   shareLocation,
   getImageTemplateReplyMessage,  
   bookNow,
-  getReplyToCustomer,sendQuickReplyButtonMessages
+  getReplyToCustomer,sendQuickReplyButtonMessages,getBookingConfirmationMessage,getBookingCancellationMessage
 };
