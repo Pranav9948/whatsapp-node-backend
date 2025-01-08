@@ -2,9 +2,9 @@
 import express from 'express';
 import  {getWelcomeMessage,getReplyToCustomer,getTemplateMissingCustomer,getBookingConfirmationMessage,enquirePackageDetails,getPackageVideos,dateTesting,enquirePackageDetailsPdf,shareLocation,bookNow,getBookingCancellationMessage} from '../controllers/whatsappControllers.js'
 import { getPackageImage, uploadPackageImage } from '../Helpers/WhatsappHelper.js';
-import TourPackageImage from '../models/tourPackageImage.js';
+import TourPackageImage from '../models/tourpackageimages.js';
 
-const router = express.Router();
+const router = express.Router(); 
 
 
 
