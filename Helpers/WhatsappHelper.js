@@ -604,7 +604,6 @@ async function replyMessageStorage(userMessage, username, from, messageType) {
 function mapBookingDetailsFromMessage(msgBody) {
   const bookingDetailsArray = {
     packageName: "Not Provided",
-
     checkIn: "Not Provided",
     checkOut: "Not Provided",
     roomType: "Not Provided",

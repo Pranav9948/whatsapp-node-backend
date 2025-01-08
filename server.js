@@ -173,7 +173,7 @@ app.post("/webhook", async (req, res) => {
           return res.status(200).send("Message sent successfully");
         }
       } else {
-        // No match if the initial phrase isn't present
+        
         console.log("No condition matched...");
       }
 
@@ -186,26 +186,54 @@ app.post("/webhook", async (req, res) => {
       );
       console.log("Response for existing user:", response);
     } else {
-      // New user case
-      console.log(
-        "New user detected. Creating user and sending welcome message."
-      );
 
-      const newUser = new User({
-        senderId,
-        messageIds: [messageId], // Initialize with the first messageId
-        hasReceivedWelcomeMessage: true,
-      });
-      await newUser.save();
-      console.log("New user created:", newUser);
 
-      // Send the welcome message template
-      const responseTemplate = getWelcomeMessageTemplate(
-        senderId,
-        "User"
-      );
-      const completedResponse = await sendMessage(responseTemplate);
-      console.log("Welcome message sent to new user:", completedResponse);
+       // New user case
+    console.log("New user detected. Creating user and sending welcome message.");
+  
+    const newUser = new User({
+      senderId,
+      messageIds: [messageId], // Initialize with the first messageId
+      hasReceivedWelcomeMessage: true,
+    });
+    await newUser.save();
+    console.log("New user created:", newUser);
+  
+    // Send the welcome message template
+    const responseTemplate = getWelcomeMessageTemplate(senderId, "User");
+    const completedResponse = await sendMessage(responseTemplate);
+    console.log("Welcome message sent to new user:", completedResponse);
+  
+    // Check for "Scenario 1" or "Scenario 2" based on msgBody
+    const interestPattern = /^Hello, I am interested in booking/i;
+  
+    // Step 2: Check if all required fields are present
+    const hasAllDetails = (msgBody) =>
+      requiredFields.every((field) => msgBody.includes(field));
+  
+    if (interestPattern.test(msgBody)) {
+      // Scenario 1: All required fields are present
+      if (hasAllDetails(msgBody)) {
+        console.log("Detected Scenario 1: All Details Filled");
+  
+        await getReplyToCustomer(req, res, senderId, msgBody);
+  
+        return res.status(200).send("Scenario 1 message sent successfully");
+      } else {
+        // Scenario 2: Missing Details
+        console.log("Detected Scenario 2: Missing Details");
+  
+        await getTemplateMissingCustomer(req, res, senderId, msgBody);
+  
+        return res.status(200).send("Scenario 2 message sent successfully");
+      }
+    } else {
+      console.log("Message does not match any scenario.");
+    }
+  
+    // Respond to the client
+    return res.status(200).send("New user processed successfully");
+      
     }
 
     // Respond to the client
