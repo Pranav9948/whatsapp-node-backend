@@ -41,7 +41,7 @@ router.post('/uploadPackageImage', async (req, res) => {
 
 
     try {
-      // Check if the package exists in the database
+      // Checking if the package exists in the database
       const existingPackage = await TourPackageImage.findOne({ packageName });
   
       if (existingPackage) {
@@ -49,7 +49,7 @@ router.post('/uploadPackageImage', async (req, res) => {
       }
   
       // If the package doesn't exist, add it
-      const newPackage = new Package({ packageName, imageUrl });
+      const newPackage = new TourPackageImage({ packageName, imageUrl });
       await newPackage.save();
   
       return res.status(200).send({ message: "Package added successfully", package: newPackage });
